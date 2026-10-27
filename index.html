@@ -1,0 +1,1222 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Palette Maker</title>
+  <style>
+    :root{
+      --bg:#0f1218;
+      --panel:#161b24;
+      --panel2:#1d2430;
+      --line:#2b3445;
+      --text:#eef3ff;
+      --muted:#9aa5bf;
+      --accent:#6ea8ff;
+      --good:#45d483;
+      --warn:#ffd35e;
+      --bad:#ff6b7a;
+      --shadow:0 18px 45px rgba(0,0,0,.34);
+      --radius:18px;
+    }
+
+    [data-theme="light"]{
+      --bg:#edf3fb;
+      --panel:#ffffff;
+      --panel2:#f3f7fc;
+      --line:#d9e2ef;
+      --text:#101521;
+      --muted:#5d6679;
+      --shadow:0 16px 30px rgba(18,28,45,.08);
+    }
+
+    *{box-sizing:border-box}
+    html,body{
+      margin:0;
+      min-height:100%;
+      font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI","Pretendard",sans-serif;
+      background:linear-gradient(180deg,var(--bg),color-mix(in srgb, var(--bg) 82%, #000 18%));
+      color:var(--text);
+    }
+
+    button,input,select,textarea{
+      font:inherit;
+    }
+
+    button{
+      cursor:pointer;
+    }
+
+    .app{
+      max-width:1440px;
+      margin:0 auto;
+      padding:22px;
+      display:grid;
+      gap:16px;
+    }
+
+    .topbar{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:14px;
+      flex-wrap:wrap;
+    }
+
+    .title h1{
+      margin:0;
+      font-size:28px;
+      letter-spacing:-.03em;
+    }
+
+    .title p{
+      margin:8px 0 0;
+      color:var(--muted);
+      line-height:1.6;
+      font-size:13px;
+    }
+
+    .toolbar{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+      justify-content:flex-end;
+    }
+
+    .btn{
+      border:1px solid var(--line);
+      background:var(--panel);
+      color:var(--text);
+      padding:11px 14px;
+      border-radius:14px;
+      box-shadow:var(--shadow);
+      transition:.16s ease;
+    }
+
+    .btn:hover{
+      transform:translateY(-1px);
+      border-color:color-mix(in srgb, var(--accent) 35%, var(--line));
+    }
+
+    .btn.primary{
+      background:linear-gradient(135deg,var(--accent),#8f7cff);
+      color:#fff;
+      border:none;
+      font-weight:700;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: 340px 1fr;
+      gap:16px;
+    }
+
+    .card{
+      background:linear-gradient(180deg,var(--panel),color-mix(in srgb, var(--panel) 90%, #000 10%));
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      padding:18px;
+      box-shadow:var(--shadow);
+    }
+
+    .card h2{
+      margin:0 0 14px;
+      font-size:18px;
+    }
+
+    .control{
+      display:grid;
+      gap:7px;
+      margin-bottom:12px;
+    }
+
+    .control label{
+      font-size:13px;
+      color:var(--muted);
+    }
+
+    .control input,
+    .control select,
+    .control textarea{
+      width:100%;
+      border:1px solid var(--line);
+      background:var(--panel2);
+      color:var(--text);
+      border-radius:12px;
+      padding:11px 12px;
+      outline:none;
+    }
+
+    .control textarea{
+      min-height:80px;
+      resize:vertical;
+    }
+
+    .row{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .row > *{
+      flex:1;
+      min-width:0;
+    }
+
+    .palette-wrap{
+      display:grid;
+      gap:14px;
+    }
+
+    .palette{
+      display:grid;
+      grid-template-columns: repeat(5, minmax(0,1fr));
+      gap:12px;
+    }
+
+    .swatch{
+      border:1px solid var(--line);
+      border-radius:18px;
+      overflow:hidden;
+      min-height:240px;
+      display:flex;
+      flex-direction:column;
+      box-shadow:var(--shadow);
+      position:relative;
+    }
+
+    .swatch-top{
+      flex:1;
+      min-height:170px;
+      padding:14px;
+      display:flex;
+      flex-direction:column;
+      justify-content:space-between;
+    }
+
+    .swatch-actions{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+
+    .mini-btn{
+      border:none;
+      border-radius:999px;
+      padding:7px 10px;
+      background:rgba(255,255,255,.18);
+      color:inherit;
+      backdrop-filter:blur(6px);
+    }
+
+    .swatch-bottom{
+      background:var(--panel);
+      color:var(--text);
+      padding:12px;
+      display:grid;
+      gap:8px;
+      border-top:1px solid rgba(255,255,255,.08);
+    }
+
+    .code{
+      font-weight:800;
+      font-size:15px;
+      letter-spacing:.02em;
+    }
+
+    .meta{
+      font-size:12px;
+      color:var(--muted);
+      line-height:1.55;
+      word-break:break-word;
+    }
+
+    .section{
+      display:grid;
+      gap:14px;
+    }
+
+    .scheme-list{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+    }
+
+    .chip{
+      border:1px solid var(--line);
+      background:var(--panel2);
+      color:var(--text);
+      border-radius:999px;
+      padding:9px 12px;
+    }
+
+    .chip.active{
+      background:linear-gradient(135deg,var(--accent),#8f7cff);
+      color:#fff;
+      border:none;
+      font-weight:700;
+    }
+
+    .results{
+      display:grid;
+      gap:12px;
+    }
+
+    .result-card{
+      border:1px solid var(--line);
+      background:var(--panel2);
+      border-radius:16px;
+      padding:14px;
+      display:grid;
+      gap:10px;
+    }
+
+    .result-head{
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+
+    .result-head strong{
+      font-size:14px;
+    }
+
+    .result-colors{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+    }
+
+    .color-pill{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      border:1px solid var(--line);
+      border-radius:999px;
+      padding:7px 10px;
+      background:var(--panel);
+      font-size:12px;
+    }
+
+    .dot{
+      width:16px;
+      height:16px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.22);
+    }
+
+    .contrast{
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:10px;
+    }
+
+    .contrast-box{
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:12px;
+      background:var(--panel);
+    }
+
+    .contrast-box .big{
+      font-size:16px;
+      font-weight:800;
+      margin-bottom:6px;
+    }
+
+    .small{
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.5;
+    }
+
+    .saved-list{
+      display:grid;
+      gap:10px;
+      margin-top:10px;
+    }
+
+    .saved-item{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      border:1px solid var(--line);
+      background:var(--panel2);
+      border-radius:14px;
+      padding:12px;
+    }
+
+    .saved-item .name{
+      font-weight:700;
+      margin-bottom:4px;
+    }
+
+    .saved-item .desc{
+      color:var(--muted);
+      font-size:12px;
+    }
+
+    .saved-actions{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+
+    .tiny{
+      border:1px solid var(--line);
+      background:var(--panel);
+      color:var(--text);
+      border-radius:10px;
+      padding:8px 10px;
+      font-size:12px;
+    }
+
+    .split{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:16px;
+    }
+
+    .hidden{
+      display:none !important;
+    }
+
+    @media (max-width: 1120px){
+      .grid,.split{
+        grid-template-columns:1fr;
+      }
+      .palette{
+        grid-template-columns:repeat(2,minmax(0,1fr));
+      }
+    }
+
+    @media (max-width: 640px){
+      .app{
+        padding:14px;
+      }
+      .palette{
+        grid-template-columns:1fr;
+      }
+      .contrast{
+        grid-template-columns:1fr;
+      }
+      .title h1{
+        font-size:24px;
+      }
+    }
+  </style>
+</head>
+<body data-theme="dark">
+  <div class="app">
+    <div class="topbar">
+      <div class="title">
+        <h1>Color Palette Maker</h1>
+        <p>
+          색 조합 추천기 + 팔레트 제작기. 베이스 컬러를 넣으면 조화 규칙별 팔레트를 만들고,
+          대비·복사·저장까지 한 번에 할 수 있어.
+        </p>
+      </div>
+      <div class="toolbar">
+        <button class="btn" id="themeBtn">라이트 모드</button>
+        <button class="btn" id="randomBtn">랜덤 색</button>
+        <button class="btn primary" id="saveBtn">팔레트 저장</button>
+      </div>
+    </div>
+
+    <div class="grid">
+      <aside class="card">
+        <h2>설정</h2>
+
+        <div class="control">
+          <label for="baseColor">베이스 컬러</label>
+          <input type="color" id="baseColor" value="#6ea8ff" />
+        </div>
+
+        <div class="control">
+          <label for="baseHex">HEX 직접 입력</label>
+          <input type="text" id="baseHex" value="#6ea8ff" placeholder="#6ea8ff" />
+        </div>
+
+        <div class="control">
+          <label for="scheme">추천 방식</label>
+          <select id="scheme">
+            <option value="complementary">보색</option>
+            <option value="analogous">유사색</option>
+            <option value="triadic">삼각조화</option>
+            <option value="split">분할보색</option>
+            <option value="mono">단색</option>
+          </select>
+        </div>
+
+        <div class="control">
+          <label for="count">생성 개수</label>
+          <input type="range" id="count" min="3" max="8" value="5" />
+          <div class="small"><span id="countLabel">5</span>개</div>
+        </div>
+
+        <div class="row">
+          <button class="btn primary" id="generateBtn">팔레트 생성</button>
+          <button class="btn" id="copyAllBtn">전체 복사</button>
+        </div>
+
+        <div style="height:14px"></div>
+
+        <div class="control">
+          <label for="manualInput">직접 색 추가</label>
+          <input type="text" id="manualInput" placeholder="#ff6b7a, #6ea8ff, rgb(20,40,60)" />
+        </div>
+        <button class="btn" id="addManualBtn">색 추가</button>
+
+        <div style="height:16px"></div>
+
+        <div class="control">
+          <label>현재 베이스 정보</label>
+          <div class="small" id="baseInfo"></div>
+        </div>
+
+        <div class="control">
+          <label>대비 추천</label>
+          <div class="contrast">
+            <div class="contrast-box" id="contrastBlack"></div>
+            <div class="contrast-box" id="contrastWhite"></div>
+          </div>
+        </div>
+      </aside>
+
+      <main class="section">
+        <div class="card palette-wrap">
+          <h2>팔레트</h2>
+          <div class="palette" id="palette"></div>
+        </div>
+
+        <div class="split">
+          <div class="card">
+            <h2>조합 추천</h2>
+            <div class="scheme-list" id="schemeList"></div>
+            <div style="height:12px"></div>
+            <div class="results" id="results"></div>
+          </div>
+
+          <div class="card">
+            <h2>저장된 팔레트</h2>
+            <div class="small">
+              브라우저에 저장돼. 나중에 다시 불러올 수 있어.
+            </div>
+            <div class="saved-list" id="savedList"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>색상 값 변환</h2>
+          <div class="results" id="convertList"></div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = "palette-maker-saved-v1";
+    const THEME_KEY = "palette-maker-theme-v1";
+
+    const schemeNames = {
+      complementary: "보색",
+      analogous: "유사색",
+      triadic: "삼각조화",
+      split: "분할보색",
+      mono: "단색"
+    };
+
+    const schemeChips = [
+      { value:"complementary", label:"보색" },
+      { value:"analogous", label:"유사색" },
+      { value:"triadic", label:"삼각조화" },
+      { value:"split", label:"분할보색" },
+      { value:"mono", label:"단색" }
+    ];
+
+    const $ = (id) => document.getElementById(id);
+
+    const state = {
+      base: "#6ea8ff",
+      scheme: "complementary",
+      count: 5,
+      colors: [],
+      saved: []
+    };
+
+    function clamp(v, min, max){
+      return Math.min(max, Math.max(min, v));
+    }
+
+    function toHex(v){
+      return v.toString(16).padStart(2, "0");
+    }
+
+    function hexToRgb(hex){
+      hex = sanitizeHex(hex);
+      const n = hex.replace("#", "");
+      const full = n.length === 3 ? n.split("").map(ch => ch + ch).join("") : n;
+      const int = parseInt(full, 16);
+      return {
+        r: (int >> 16) & 255,
+        g: (int >> 8) & 255,
+        b: int & 255
+      };
+    }
+
+    function rgbToHex(r, g, b){
+      return "#" + toHex(clamp(Math.round(r),0,255)) + toHex(clamp(Math.round(g),0,255)) + toHex(clamp(Math.round(b),0,255));
+    }
+
+    function rgbToHsl(r, g, b){
+      r /= 255; g /= 255; b /= 255;
+      const max = Math.max(r,g,b), min = Math.min(r,g,b);
+      let h, s, l = (max + min) / 2;
+
+      if(max === min){
+        h = s = 0;
+      }else{
+        const d = max - min;
+        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+        switch(max){
+          case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+          case g: h = (b - r) / d + 2; break;
+          default: h = (r - g) / d + 4;
+        }
+        h *= 60;
+      }
+      return { h, s: s * 100, l: l * 100 };
+    }
+
+    function hslToRgb(h, s, l){
+      h = ((h % 360) + 360) % 360;
+      s /= 100;
+      l /= 100;
+
+      const c = (1 - Math.abs(2 * l - 1)) * s;
+      const x = c * (1 - Math.abs((h / 60) % 2 - 1));
+      const m = l - c / 2;
+
+      let r1 = 0, g1 = 0, b1 = 0;
+
+      if(h < 60){ r1 = c; g1 = x; }
+      else if(h < 120){ r1 = x; g1 = c; }
+      else if(h < 180){ g1 = c; b1 = x; }
+      else if(h < 240){ g1 = x; b1 = c; }
+      else if(h < 300){ r1 = x; b1 = c; }
+      else { r1 = c; b1 = x; }
+
+      return {
+        r: (r1 + m) * 255,
+        g: (g1 + m) * 255,
+        b: (b1 + m) * 255
+      };
+    }
+
+    function hexToHsl(hex){
+      const {r,g,b} = hexToRgb(hex);
+      return rgbToHsl(r,g,b);
+    }
+
+    function hslToHex(h, s, l){
+      const {r,g,b} = hslToRgb(h,s,l);
+      return rgbToHex(r,g,b);
+    }
+
+    function sanitizeHex(text){
+      let s = String(text || "").trim();
+      if(!s) return "#000000";
+      if(!s.startsWith("#") && /^[0-9a-fA-F]{3}$/.test(s)) s = "#" + s;
+      if(!s.startsWith("#") && /^[0-9a-fA-F]{6}$/.test(s)) s = "#" + s;
+      if(/^#[0-9a-fA-F]{3}$/.test(s) || /^#[0-9a-fA-F]{6}$/.test(s)) return s.toLowerCase();
+      return "#000000";
+    }
+
+    function parseColor(input){
+      const s = String(input || "").trim();
+
+      if(/^#?[0-9a-fA-F]{3}$/.test(s) || /^#?[0-9a-fA-F]{6}$/.test(s)){
+        return sanitizeHex(s);
+      }
+
+      const rgb = s.match(/rgb\s*\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*\)/i);
+      if(rgb){
+        return rgbToHex(Number(rgb[1]), Number(rgb[2]), Number(rgb[3]));
+      }
+
+      const hsl = s.match(/hsl\s*\(\s*(-?\d+(?:\.\d+)?)\s*,\s*(\d+(?:\.\d+)?)%\s*,\s*(\d+(?:\.\d+)?)%\s*\)/i);
+      if(hsl){
+        return hslToHex(Number(hsl[1]), Number(hsl[2]), Number(hsl[3]));
+      }
+
+      return null;
+    }
+
+    function luminance({r,g,b}){
+      const srgb = [r,g,b].map(v => {
+        v /= 255;
+        return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+      });
+      return 0.2126 * srgb[0] + 0.7152 * srgb[1] + 0.0722 * srgb[2];
+    }
+
+    function contrastRatio(hex1, hex2){
+      const L1 = luminance(hexToRgb(hex1));
+      const L2 = luminance(hexToRgb(hex2));
+      const light = Math.max(L1, L2);
+      const dark = Math.min(L1, L2);
+      return (light + 0.05) / (dark + 0.05);
+    }
+
+    function bestTextColor(bgHex){
+      const black = contrastRatio(bgHex, "#000000");
+      const white = contrastRatio(bgHex, "#ffffff");
+      return white >= black ? "#ffffff" : "#000000";
+    }
+
+    function formatHsl(hex){
+      const {h,s,l} = hexToHsl(hex);
+      return `hsl(${Math.round(h)}, ${Math.round(s)}%, ${Math.round(l)}%)`;
+    }
+
+    function formatRgb(hex){
+      const {r,g,b} = hexToRgb(hex);
+      return `rgb(${Math.round(r)}, ${Math.round(g)}, ${Math.round(b)})`;
+    }
+
+    function getColorInfo(hex){
+      const {r,g,b} = hexToRgb(hex);
+      const hsl = hexToHsl(hex);
+      return {
+        hex,
+        rgb: `rgb(${r}, ${g}, ${b})`,
+        hsl: `hsl(${Math.round(hsl.h)}, ${Math.round(hsl.s)}%, ${Math.round(hsl.l)}%)`
+      };
+    }
+
+    function rotateHue(hex, delta){
+      const hsl = hexToHsl(hex);
+      return hslToHex(hsl.h + delta, hsl.s, hsl.l);
+    }
+
+    function setLightness(hex, l){
+      const hsl = hexToHsl(hex);
+      return hslToHex(hsl.h, hsl.s, clamp(l, 0, 100));
+    }
+
+    function setSaturation(hex, s){
+      const hsl = hexToHsl(hex);
+      return hslToHex(hsl.h, clamp(s, 0, 100), hsl.l);
+    }
+
+    function generatePalette(base, scheme, count){
+      const colors = [sanitizeHex(base)];
+      const hsl = hexToHsl(base);
+      const h = hsl.h;
+      const s = hsl.s;
+      const l = hsl.l;
+
+      if(scheme === "complementary"){
+        colors.push(rotateHue(base, 180));
+        colors.push(setLightness(base, clamp(l + 12, 12, 88)));
+        colors.push(setLightness(rotateHue(base, 180), clamp(l - 12, 12, 88)));
+        colors.push(setSaturation(rotateHue(base, 180), clamp(s - 18, 20, 100)));
+      }
+
+      if(scheme === "analogous"){
+        colors.push(rotateHue(base, -30));
+        colors.push(rotateHue(base, -15));
+        colors.push(rotateHue(base, 15));
+        colors.push(rotateHue(base, 30));
+      }
+
+      if(scheme === "triadic"){
+        colors.push(rotateHue(base, 120));
+        colors.push(rotateHue(base, 240));
+        colors.push(setLightness(base, clamp(l + 14, 10, 90)));
+        colors.push(setLightness(rotateHue(base, 120), clamp(l - 10, 10, 90)));
+      }
+
+      if(scheme === "split"){
+        colors.push(rotateHue(base, 150));
+        colors.push(rotateHue(base, -150));
+        colors.push(setLightness(base, clamp(l + 14, 10, 90)));
+        colors.push(setSaturation(rotateHue(base, 150), clamp(s - 15, 25, 100)));
+      }
+
+      if(scheme === "mono"){
+        colors.push(setLightness(base, clamp(l - 22, 8, 92)));
+        colors.push(setLightness(base, clamp(l - 10, 8, 92)));
+        colors.push(setLightness(base, clamp(l + 10, 8, 92)));
+        colors.push(setLightness(base, clamp(l + 22, 8, 92)));
+      }
+
+      const unique = [];
+      const seen = new Set();
+      for(const c of colors){
+        const h = sanitizeHex(c);
+        if(!seen.has(h)){
+          seen.add(h);
+          unique.push(h);
+        }
+      }
+
+      while(unique.length < count){
+        const step = unique.length * 14;
+        unique.push(setLightness(rotateHue(base, step), clamp(l + (unique.length % 2 === 0 ? 10 : -10), 8, 92)));
+      }
+
+      return unique.slice(0, count);
+    }
+
+    function buildPalette(colors){
+      const wrap = $("palette");
+      wrap.innerHTML = "";
+
+      colors.forEach((hex, index) => {
+        const info = getColorInfo(hex);
+        const textColor = bestTextColor(hex);
+
+        const card = document.createElement("div");
+        card.className = "swatch";
+        card.innerHTML = `
+          <div class="swatch-top" style="background:${hex};color:${textColor}">
+            <div class="swatch-actions">
+              <button class="mini-btn" data-copy="${hex}" type="button">복사</button>
+              <button class="mini-btn" data-remove="${index}" type="button">삭제</button>
+            </div>
+            <div>
+              <div style="font-size:12px;opacity:.88;margin-bottom:8px">색 ${index + 1}</div>
+              <div class="code">${info.hex}</div>
+              <div class="meta">${info.rgb}</div>
+              <div class="meta">${info.hsl}</div>
+            </div>
+          </div>
+          <div class="swatch-bottom">
+            <div class="meta">대비 추천: 배경이 어두우면 흰색 / 밝으면 검은색</div>
+            <div class="meta">읽기 좋은 텍스트: <strong>${bestTextColor(hex)}</strong></div>
+          </div>
+        `;
+        wrap.appendChild(card);
+      });
+
+      wrap.querySelectorAll("[data-copy]").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          await navigator.clipboard.writeText(btn.dataset.copy);
+          btn.textContent = "복사됨";
+          setTimeout(() => btn.textContent = "복사", 900);
+        });
+      });
+
+      wrap.querySelectorAll("[data-remove]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const idx = Number(btn.dataset.remove);
+          state.colors.splice(idx, 1);
+          render();
+        });
+      });
+    }
+
+    function buildSchemeChips(){
+      const wrap = $("schemeList");
+      wrap.innerHTML = "";
+      schemeChips.forEach(item => {
+        const chip = document.createElement("button");
+        chip.className = "chip" + (state.scheme === item.value ? " active" : "");
+        chip.type = "button";
+        chip.textContent = item.label;
+        chip.addEventListener("click", () => {
+          state.scheme = item.value;
+          $("scheme").value = item.value;
+          render();
+        });
+        wrap.appendChild(chip);
+      });
+    }
+
+    function buildResults(){
+      const wrap = $("results");
+      const base = state.base;
+      const schemes = ["complementary","analogous","triadic","split","mono"];
+
+      wrap.innerHTML = "";
+
+      schemes.forEach(scheme => {
+        const colors = generatePalette(base, scheme, 5);
+        const card = document.createElement("div");
+        card.className = "result-card";
+        card.innerHTML = `
+          <div class="result-head">
+            <strong>${schemeNames[scheme]}</strong>
+            <button class="tiny" data-loadscheme="${scheme}" type="button">이 방식 보기</button>
+          </div>
+          <div class="result-colors">
+            ${colors.map(c => {
+              const info = getColorInfo(c);
+              return `
+                <button class="color-pill" data-copyhex="${c}" type="button">
+                  <span class="dot" style="background:${c}"></span>
+                  <span>${info.hex}</span>
+                </button>
+              `;
+            }).join("")}
+          </div>
+        `;
+        wrap.appendChild(card);
+      });
+
+      wrap.querySelectorAll("[data-loadscheme]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          state.scheme = btn.dataset.loadscheme;
+          $("scheme").value = state.scheme;
+          render();
+          document.getElementById("palette").scrollIntoView({ behavior:"smooth", block:"start" });
+        });
+      });
+
+      wrap.querySelectorAll("[data-copyhex]").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          await navigator.clipboard.writeText(btn.dataset.copyhex);
+        });
+      });
+    }
+
+    function buildConvertList(){
+      const wrap = $("convertList");
+      wrap.innerHTML = "";
+
+      state.colors.forEach((hex, idx) => {
+        const info = getColorInfo(hex);
+        const item = document.createElement("div");
+        item.className = "result-card";
+        item.innerHTML = `
+          <div class="result-head">
+            <strong>색 ${idx + 1}</strong>
+            <button class="tiny" data-copyall="${hex}" type="button">HEX 복사</button>
+          </div>
+          <div class="result-colors">
+            <div class="color-pill"><span class="dot" style="background:${hex}"></span><span>${info.hex}</span></div>
+            <div class="color-pill"><span>${info.rgb}</span></div>
+            <div class="color-pill"><span>${info.hsl}</span></div>
+          </div>
+        `;
+        wrap.appendChild(item);
+      });
+    }
+
+    function buildSavedList(){
+      const wrap = $("savedList");
+      wrap.innerHTML = "";
+
+      if(!state.saved.length){
+        wrap.innerHTML = `<div class="small">저장된 팔레트가 아직 없어.</div>`;
+        return;
+      }
+
+      state.saved.forEach((item, idx) => {
+        const row = document.createElement("div");
+        row.className = "saved-item";
+        row.innerHTML = `
+          <div>
+            <div class="name">${escapeHtml(item.name)}</div>
+            <div class="desc">${item.colors.join(" · ")}</div>
+          </div>
+          <div class="saved-actions">
+            <button class="tiny" data-load="${idx}" type="button">불러오기</button>
+            <button class="tiny" data-del="${idx}" type="button">삭제</button>
+          </div>
+        `;
+        wrap.appendChild(row);
+      });
+
+      wrap.querySelectorAll("[data-load]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const item = state.saved[Number(btn.dataset.load)];
+          state.colors = [...item.colors];
+          state.base = item.colors[0] || state.base;
+          $("baseColor").value = state.base;
+          $("baseHex").value = state.base;
+          render();
+        });
+      });
+
+      wrap.querySelectorAll("[data-del]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          state.saved.splice(Number(btn.dataset.del), 1);
+          saveSaved();
+          buildSavedList();
+        });
+      });
+    }
+
+    function buildContrast(){
+      const black = contrastRatio(state.base, "#000000");
+      const white = contrastRatio(state.base, "#ffffff");
+
+      $("contrastBlack").innerHTML = `
+        <div class="big">검은색</div>
+        <div class="small">대비 비율: ${black.toFixed(2)}:1</div>
+        <div class="small">${black >= 4.5 ? "읽기 좋음" : "조금 약함"}</div>
+      `;
+
+      $("contrastWhite").innerHTML = `
+        <div class="big">흰색</div>
+        <div class="small">대비 비율: ${white.toFixed(2)}:1</div>
+        <div class="small">${white >= 4.5 ? "읽기 좋음" : "조금 약함"}</div>
+      `;
+    }
+
+    function buildBaseInfo(){
+      const info = getColorInfo(state.base);
+      $("baseInfo").innerHTML = `
+        <div><strong>HEX</strong> ${info.hex}</div>
+        <div><strong>RGB</strong> ${info.rgb}</div>
+        <div><strong>HSL</strong> ${info.hsl}</div>
+      `;
+    }
+
+    function saveSaved(){
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state.saved));
+    }
+
+    function loadSaved(){
+      try{
+        const raw = localStorage.getItem(STORAGE_KEY);
+        state.saved = raw ? JSON.parse(raw) : [];
+      }catch{
+        state.saved = [];
+      }
+    }
+
+    function saveTheme(){
+      localStorage.setItem(THEME_KEY, document.body.dataset.theme);
+    }
+
+    function loadTheme(){
+      const theme = localStorage.getItem(THEME_KEY) || "dark";
+      document.body.dataset.theme = theme;
+      $("themeBtn").textContent = theme === "dark" ? "라이트 모드" : "다크 모드";
+    }
+
+    function randomHex(){
+      const r = Math.floor(Math.random() * 256);
+      const g = Math.floor(Math.random() * 256);
+      const b = Math.floor(Math.random() * 256);
+      return rgbToHex(r,g,b);
+    }
+
+    function addManualColors(){
+      const raw = $("manualInput").value.trim();
+      if(!raw) return;
+
+      const parts = raw.split(/[,|\n]/).map(s => s.trim()).filter(Boolean);
+      const added = [];
+
+      parts.forEach(part => {
+        const parsed = parseColor(part);
+        if(parsed) added.push(parsed);
+      });
+
+      if(!added.length){
+        alert("인식할 수 있는 색상이 없어.");
+        return;
+      }
+
+      state.colors = [...new Set([...state.colors, ...added])];
+      render();
+      $("manualInput").value = "";
+    }
+
+    function render(){
+      $("countLabel").textContent = $("count").value;
+      state.count = Number($("count").value);
+      state.scheme = $("scheme").value;
+      state.base = sanitizeHex($("baseHex").value || $("baseColor").value);
+
+      $("baseColor").value = state.base;
+      $("baseHex").value = state.base;
+
+      if(state.colors.length === 0){
+        state.colors = generatePalette(state.base, state.scheme, state.count);
+      }
+
+      if(state.colors[0] !== state.base){
+        state.colors[0] = state.base;
+      }
+
+      buildSchemeChips();
+      buildPalette(state.colors);
+      buildResults();
+      buildConvertList();
+      buildSavedList();
+      buildBaseInfo();
+      buildContrast();
+    }
+
+    function saveCurrentPalette(){
+      const name = prompt("팔레트 이름을 입력해줘", `Palette ${state.saved.length + 1}`);
+      if(!name) return;
+
+      state.saved.unshift({
+        name: name.trim(),
+        colors: [...state.colors]
+      });
+
+      saveSaved();
+      buildSavedList();
+    }
+
+    function copyAllColors(){
+      const text = state.colors.join(", ");
+      navigator.clipboard.writeText(text);
+    }
+
+    function exportJson(){
+      const blob = new Blob([JSON.stringify(state.saved, null, 2)], { type:"application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "palette-maker-backup.json";
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function importJson(file){
+      const reader = new FileReader();
+      reader.onload = () => {
+        try{
+          const obj = JSON.parse(reader.result);
+          if(Array.isArray(obj)){
+            state.saved = obj;
+            saveSaved();
+            buildSavedList();
+          }else{
+            alert("JSON 형식이 맞지 않아.");
+          }
+        }catch{
+          alert("파일을 읽지 못했어.");
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function escapeHtml(str){
+      return String(str ?? "")
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#39;");
+    }
+
+    function attachEvents(){
+      $("baseColor").addEventListener("input", e => {
+        state.base = e.target.value;
+        $("baseHex").value = state.base;
+        state.colors[0] = state.base;
+        render();
+      });
+
+      $("baseHex").addEventListener("input", e => {
+        const parsed = parseColor(e.target.value);
+        if(parsed){
+          state.base = parsed;
+          $("baseColor").value = parsed;
+          state.colors[0] = parsed;
+          render();
+        }
+      });
+
+      $("scheme").addEventListener("change", e => {
+        state.scheme = e.target.value;
+        state.colors = generatePalette(state.base, state.scheme, state.count);
+        render();
+      });
+
+      $("count").addEventListener("input", e => {
+        state.count = Number(e.target.value);
+        $("countLabel").textContent = state.count;
+        state.colors = generatePalette(state.base, state.scheme, state.count);
+        render();
+      });
+
+      $("generateBtn").addEventListener("click", () => {
+        state.colors = generatePalette(state.base, state.scheme, state.count);
+        render();
+      });
+
+      $("randomBtn").addEventListener("click", () => {
+        state.base = randomHex();
+        $("baseColor").value = state.base;
+        $("baseHex").value = state.base;
+        state.colors = generatePalette(state.base, state.scheme, state.count);
+        render();
+      });
+
+      $("themeBtn").addEventListener("click", () => {
+        document.body.dataset.theme = document.body.dataset.theme === "dark" ? "light" : "dark";
+        $("themeBtn").textContent = document.body.dataset.theme === "dark" ? "라이트 모드" : "다크 모드";
+        saveTheme();
+      });
+
+      $("saveBtn").addEventListener("click", saveCurrentPalette);
+      $("copyAllBtn").addEventListener("click", copyAllColors);
+      $("addManualBtn").addEventListener("click", addManualColors);
+
+      document.addEventListener("keydown", e => {
+        if((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s"){
+          e.preventDefault();
+          saveCurrentPalette();
+        }
+      });
+
+      const upload = document.createElement("input");
+      upload.type = "file";
+      upload.accept = "application/json";
+      upload.className = "hidden";
+      upload.id = "importFile";
+      document.body.appendChild(upload);
+
+      upload.addEventListener("change", e => {
+        if(e.target.files && e.target.files[0]) importJson(e.target.files[0]);
+      });
+
+      const loadImportBtn = () => {
+        const btn = document.createElement("button");
+        btn.className = "btn";
+        btn.type = "button";
+        btn.textContent = "JSON 가져오기";
+        btn.addEventListener("click", () => upload.click());
+        $("savedList").parentElement.querySelector("h2").after(btn);
+      };
+      loadImportBtn();
+
+      const exportBtn = document.createElement("button");
+      exportBtn.className = "btn";
+      exportBtn.type = "button";
+      exportBtn.textContent = "JSON 내보내기";
+      exportBtn.addEventListener("click", exportJson);
+      $("savedList").parentElement.querySelector("h2").after(exportBtn);
+    }
+
+    function init(){
+      loadTheme();
+      loadSaved();
+      $("scheme").value = state.scheme;
+      $("count").value = state.count;
+      $("countLabel").textContent = state.count;
+      $("baseColor").value = state.base;
+      $("baseHex").value = state.base;
+      state.colors = generatePalette(state.base, state.scheme, state.count);
+      attachEvents();
+      render();
+    }
+
+    init();
+  </script>
+</body>
+</html>
